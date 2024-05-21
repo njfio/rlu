@@ -65,6 +65,8 @@ enum Commands {
     Add {
         #[arg(long)]
         content: Option<String>,
+        #[arg(long)]
+        date: Option<String>,
     },
     Show {
         #[arg(long)]
@@ -73,32 +75,44 @@ enum Commands {
     Get {
         #[arg(long)]
         entry_id: String,
+        #[arg(long)]
+        date: Option<String>,
     },
     OutputContent {
         #[arg(long)]
         entry_id: String,
+        #[arg(long)]
+        date: Option<String>,
     },
     AddToStart {
         #[arg(long)]
         entry_id: String,
         #[arg(long)]
         content: Option<String>,
+        #[arg(long)]
+        date: Option<String>,
     },
     AppendToEnd {
         #[arg(long)]
         entry_id: String,
         #[arg(long)]
         content: Option<String>,
+        #[arg(long)]
+        date: Option<String>,
     },
     AddChildNode {
         #[arg(long)]
         entry_id: String,
         #[arg(long)]
         content: Option<String>,
+        #[arg(long)]
+        date: Option<String>,
     },
     Delete {
         #[arg(long)]
         entry_id: String,
+        #[arg(long)]
+        date: Option<String>,
     },
 }
 
@@ -131,14 +145,14 @@ impl Client {
         headers
     }
 
-    pub fn add_journal_note_from_stdin(&mut self) {
+    pub fn add_journal_note_from_stdin(&mut self, _date: Option<String>) {
         let mut content = String::new();
         io::stdin().read_to_string(&mut content).unwrap();
         debug!("Content from stdin: {}", content);
         self.add_journal_note(&content);
     }
 
-    pub fn add_journal_note_from_flag(&mut self, content: &str) {
+    pub fn add_journal_note_from_flag(&mut self, content: &str, _date: Option<String>) {
         debug!("Content from flag: {}", content);
         self.add_journal_note(content);
     }
@@ -302,7 +316,7 @@ impl Client {
         }
     }
 
-    pub fn get_journal_entry(&self, entry_id: &str) {
+    pub fn get_journal_entry(&self, entry_id: &str, _date: Option<String>) {
         eprintln!("Getting journal entry with ID: {}", entry_id);
 
         let query = json!({
@@ -337,7 +351,7 @@ impl Client {
         }
     }
 
-    pub fn output_content(&self, entry_id: &str) {
+    pub fn output_content(&self, entry_id: &str, _date: Option<String>) {
         debug!("Getting content for entry with ID: {}", entry_id);
 
         // Get the block details by the entry ID
@@ -418,7 +432,7 @@ impl Client {
         }
     }
 
-    pub fn add_to_start(&mut self, entry_id: &str, input_content: Option<String>) {
+    pub fn add_to_start(&mut self, entry_id: &str, input_content: Option<String>, _date: Option<String>) {
         let new_content = self.read_content(input_content);
         debug!("Adding content to the start of entry with ID: {}", entry_id);
 
@@ -474,7 +488,8 @@ impl Client {
         }
     }
 
-    pub fn append_to_end(&mut self, entry_id: &str, input_content: Option<String>) {
+    // Function to append content to the end of an entry
+    pub fn append_to_end(&mut self, entry_id: &str, input_content: Option<String>, _date: Option<String>) {
         let new_content = self.read_content(input_content);
         debug!("Appending content to the end of entry with ID: {}", entry_id);
 
@@ -530,13 +545,15 @@ impl Client {
         }
     }
 
-    pub fn add_child_node(&mut self, entry_id: &str, input_content: Option<String>) {
+    // Function to add a child node to an entry
+    pub fn add_child_node(&mut self, entry_id: &str, input_content: Option<String>, _date: Option<String>) {
         let new_content = self.read_content(input_content);
         debug!("Adding child node to entry with ID: {}", entry_id);
 
         self.process_lines_as_children(entry_id, &new_content);
     }
 
+    // Helper function to process lines as children blocks
     fn process_lines_as_children(&mut self, parent_id: &str, note_text: &str) {
         let mut lines = note_text.lines();
         if let Some(first_line) = lines.next() {
@@ -588,15 +605,15 @@ impl Client {
                                 let res = self.client.post(api_url()).json(&body).send();
                                 if let Ok(response) = res {
                                     if response.status().is_success() {
-                                        debug!("Sub-block added: {}", line);
-                                        if let Some(new_id) = response.json::<HashMap<String, serde_json::Value>>()
-                                            .unwrap().get("uuid").and_then(|v| v.as_str()) {
-                                            if current_level > 0 {
-                                                stack.push(new_id.to_string());
-                                            }
-                                        }
+                                    debug!("Sub-block added: {}", line);
+                                    if let Some(new_id) = response.json::<HashMap<String, serde_json::Value>>()
+                                    .unwrap().get("uuid").and_then(|v| v.as_str()) {
+                                    if current_level > 0 {
+                                    stack.push(new_id.to_string());
+                                    }
+                                    }
                                     } else {
-                                        debug!("Failed to add sub-block: {:?}", response.text().unwrap());
+                                    debug!("Failed to add sub-block: {:?}", response.text().unwrap());
                                     }
                                 } else {
                                     debug!("Error adding sub-block: {:?}", res.unwrap_err());
@@ -615,7 +632,7 @@ impl Client {
         }
     }
 
-    pub fn delete_entry(&self, entry_id: &str) {
+    pub fn delete_entry(&self, entry_id: &str, _date: Option<String>) {
         eprintln!("Deleting entry with ID: {}", entry_id);
 
         let query = json!({
@@ -729,33 +746,33 @@ fn main() {
     let mut client = Client::new();
 
     match &cli.command {
-        Commands::Add { content } => {
+        Commands::Add { content, date } => {
             if let Some(content) = content {
-                client.add_journal_note_from_flag(content);
+                client.add_journal_note_from_flag(content, date.clone());
             } else {
-                client.add_journal_note_from_stdin();
+                client.add_journal_note_from_stdin(date.clone());
             }
         }
         Commands::Show { date } => {
             client.show_journal_entries(date);
         }
-        Commands::Get { entry_id } => {
-            client.get_journal_entry(entry_id);
+        Commands::Get { entry_id, date } => {
+            client.get_journal_entry(entry_id, date.clone());
         }
-        Commands::OutputContent { entry_id } => {
-            client.output_content(entry_id);
+        Commands::OutputContent { entry_id, date } => {
+            client.output_content(entry_id, date.clone());
         }
-        Commands::AddToStart { entry_id, content } => {
-            client.add_to_start(entry_id, content.clone());
+        Commands::AddToStart { entry_id, content, date } => {
+            client.add_to_start(entry_id, content.clone(), date.clone());
         }
-        Commands::AppendToEnd { entry_id, content } => {
-            client.append_to_end(entry_id, content.clone());
+        Commands::AppendToEnd { entry_id, content, date } => {
+            client.append_to_end(entry_id, content.clone(), date.clone());
         }
-        Commands::AddChildNode { entry_id, content } => {
-            client.add_child_node(entry_id, content.clone());
+        Commands::AddChildNode { entry_id, content, date } => {
+            client.add_child_node(entry_id, content.clone(), date.clone());
         }
-        Commands::Delete { entry_id } => {
-            client.delete_entry(entry_id);
+        Commands::Delete { entry_id, date } => {
+            client.delete_entry(entry_id, date.clone());
         }
     }
 }
