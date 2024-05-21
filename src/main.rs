@@ -6,22 +6,25 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::env;
 use std::io::{self, Read};
-use log::debug;
+use log::{debug, info};
+use env_logger;
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 struct Block {
-    format: String,
+    format: Option<String>,
     #[serde(rename = "journal?")]
-    journal: bool,
-    uuid: String,
-    page: Page,
-    id: i64,
+    journal: Option<bool>,
+    uuid: Option<String>,
+    page: Option<Page>,
+    id: Option<i64>,
     journalDay: Option<i64>,
-    parent: Parent,
+    parent: Option<Parent>,
     #[serde(default)]
     children: Vec<Vec<serde_json::Value>>,
+    #[serde(default)]
     properties: HashMap<String, serde_json::Value>,
     warning: Option<String>,
+    #[serde(default)]
     pathRefs: Vec<PathRef>,
     content: Option<String>,
     #[serde(default)]
@@ -31,27 +34,27 @@ struct Block {
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 struct Page {
-    id: i64,
+    id: Option<i64>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 struct Parent {
-    id: i64,
+    id: Option<i64>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 struct PathRef {
-    id: i64,
+    id: Option<i64>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Left {
-    id: i64,
+    id: Option<i64>,
 }
 
 #[derive(Parser)]
-#[command(name = "Logseq CLI")]
-#[command(about = "A CLI tool to interact with Logseq")]
+#[command(name = "rlu")]
+#[command(about = "Rust Logseq Utility")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -616,7 +619,7 @@ impl Client {
         eprintln!("Deleting entry with ID: {}", entry_id);
 
         let query = json!({
-            "method": "logseq.Editor.deleteBlock",
+            "method": "logseq.Editor.removeBlock",
             "args": [
                 entry_id
             ]
@@ -681,7 +684,7 @@ fn get_journal_uuid(client: &reqwest::blocking::Client) -> Result<String, String
                    [?p :block/journal? true]
                    [?p :block/journal-day ?d]
                    [(>= ?d ?today)] ]",
-            &now.format("%Y%m%d").to_string()
+        &now.format("%Y%m%d").to_string()
         ]
     });
 
@@ -720,6 +723,8 @@ fn api_url() -> String {
 }
 
 fn main() {
+    env_logger::init();
+
     let cli = Cli::parse();
     let mut client = Client::new();
 
