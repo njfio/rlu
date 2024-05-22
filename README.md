@@ -1,4 +1,6 @@
 # rlu: Rust Logseq Utility
+[![GitBook](https://img.shields.io/badge/GitBook-Read%20Docs-blue)](https://njf.gitbook.io/rust-logseq-utility-rlu/)
+
 
 `rlu` is a Rust-based command-line utility designed to interact with Logseq, a privacy-first, open-source knowledge base that works on top of local Markdown and Org-mode files. This utility provides various functionalities including adding journal notes, displaying entries, and managing content in Logseq.
 
