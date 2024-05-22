@@ -220,7 +220,7 @@ const completionSpec = {
                                     insertValue: id.trim(),
                                 }));
                             },
-                        },
+                        }
                     },
                 },
             ],
