@@ -1,8 +1,14 @@
 # rlu: Rust Logseq Utility
+![](https://njf.gitbook.io/~gitbook/image?url=https%3A%2F%2F1687842678-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252F1FLuwCkKYFtZVgzhV4kt%252Fuploads%252FEnAZSuk0kkVhiToTCojf%252FDALL%25C2%25B7E%25202024-05-22%252011.22.25%2520-%2520Create%2520a%2520banner%2520image%2520for%2520a%2520GitBook%2520titled%2520%27RLU_%2520Rust%2520Logseq%2520Utility%27.%2520The%2520design%2520should%2520be%2520modern%2520and%2520clean%252C%2520featuring%2520the%2520Rust%2520programming%2520language%2520.webp%3Falt%3Dmedia%26token%3Dad1d446e-2690-4cf3-b232-b5a865131ad9&width=1248&dpr=1&quality=100&sign=9d2f576f94e83e0ef4558c37bd0818c55b94197bd58ed5f39a97c56dc0b49ee3)
+
 [![GitBook](https://img.shields.io/badge/GitBook-Read%20Docs-blue)](https://njf.gitbook.io/rust-logseq-utility-rlu/)
 
 
+
 `rlu` is a Rust-based command-line utility designed to interact with Logseq, a privacy-first, open-source knowledge base that works on top of local Markdown and Org-mode files. This utility provides various functionalities including adding journal notes, displaying entries, and managing content in Logseq.
+
+[![Demo](https://cdn.loom.com/sessions/thumbnails/e10dbf4489d8475da92c3618e1403294-1716346175718-with-play.gif)](https://www.loom.com/share/e10dbf4489d8475da92c3618e1403294?sid=e7f59812-c9ab-4e3e-94c6-460a378e9ce2)
+
 
 ## Features
 
