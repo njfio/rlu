@@ -6,18 +6,19 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::env;
 use std::io::{self, Read};
-use log::{debug, info};
+use log::{debug};
 use env_logger;
 
 #[derive(Debug, Deserialize, Serialize, Default)]
-struct Block {
+pub struct Block {
     format: Option<String>,
     #[serde(rename = "journal?")]
     journal: Option<bool>,
     uuid: Option<String>,
     page: Option<Page>,
     id: Option<i64>,
-    journalDay: Option<i64>,
+    #[serde(rename = "journalDay")]
+    journal_day: Option<i64>,
     parent: Option<Parent>,
     #[serde(default)]
     children: Vec<Vec<serde_json::Value>>,
@@ -25,10 +26,12 @@ struct Block {
     properties: HashMap<String, serde_json::Value>,
     warning: Option<String>,
     #[serde(default)]
-    pathRefs: Vec<PathRef>,
+    #[serde(rename = "PathRefs")]
+    path_refs: Vec<PathRef>,
     content: Option<String>,
     #[serde(default)]
-    propertiesOrder: Vec<serde_json::Value>,
+    #[serde(rename = "propertiesOrder")]
+    properties_order: Vec<serde_json::Value>,
     left: Option<Left>,
 }
 
@@ -284,7 +287,7 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok(mut response) => {
+            Ok(response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response: {}", raw_response);
 
@@ -331,7 +334,7 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok(mut response) => {
+            Ok( response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response: {}", raw_response);
 
@@ -365,7 +368,7 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok(mut response) => {
+            Ok( response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response: {}", raw_response);
 
@@ -412,7 +415,7 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok(mut response) => {
+            Ok( response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response for child block: {}", raw_response);
 
@@ -446,13 +449,13 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok(mut response) => {
+            Ok( response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response: {}", raw_response);
 
-                let mut entry: Block = serde_json::from_str(&raw_response).unwrap();
+                let  entry: Block = serde_json::from_str(&raw_response).unwrap();
                 if let Some(content) = entry.content {
-                    let updated_content = format!("{}{}", new_content, content);
+                    let updated_content = format!("{} {}", new_content, content);
                     let update_query = json!({
                         "method": "logseq.Editor.updateBlock",
                         "args": [
@@ -478,9 +481,6 @@ impl Client {
                 } else {
                     eprintln!("No content found for this entry.");
                 }
-
-                // Process the new content as children
-                self.process_lines_as_children(&entry_id, &new_content);
             }
             Err(error) => {
                 eprintln!("Error: {:?}", error);
@@ -488,7 +488,6 @@ impl Client {
         }
     }
 
-    // Function to append content to the end of an entry
     pub fn append_to_end(&mut self, entry_id: &str, input_content: Option<String>, _date: Option<String>) {
         let new_content = self.read_content(input_content);
         debug!("Appending content to the end of entry with ID: {}", entry_id);
@@ -503,13 +502,13 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok(mut response) => {
+            Ok( response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response: {}", raw_response);
 
-                let mut entry: Block = serde_json::from_str(&raw_response).unwrap();
+                let  entry: Block = serde_json::from_str(&raw_response).unwrap();
                 if let Some(content) = entry.content {
-                    let updated_content = format!("{}{}", content, new_content);
+                    let updated_content = format!("{} {}", content, new_content);
                     let update_query = json!({
                         "method": "logseq.Editor.updateBlock",
                         "args": [
@@ -535,9 +534,6 @@ impl Client {
                 } else {
                     eprintln!("No content found for this entry.");
                 }
-
-                // Process the new content as children
-                self.process_lines_as_children(&entry_id, &new_content);
             }
             Err(error) => {
                 eprintln!("Error: {:?}", error);
@@ -545,7 +541,6 @@ impl Client {
         }
     }
 
-    // Function to add a child node to an entry
     pub fn add_child_node(&mut self, entry_id: &str, input_content: Option<String>, _date: Option<String>) {
         let new_content = self.read_content(input_content);
         debug!("Adding child node to entry with ID: {}", entry_id);
@@ -553,7 +548,6 @@ impl Client {
         self.process_lines_as_children(entry_id, &new_content);
     }
 
-    // Helper function to process lines as children blocks
     fn process_lines_as_children(&mut self, parent_id: &str, note_text: &str) {
         let mut lines = note_text.lines();
         if let Some(first_line) = lines.next() {
@@ -605,15 +599,15 @@ impl Client {
                                 let res = self.client.post(api_url()).json(&body).send();
                                 if let Ok(response) = res {
                                     if response.status().is_success() {
-                                    debug!("Sub-block added: {}", line);
-                                    if let Some(new_id) = response.json::<HashMap<String, serde_json::Value>>()
-                                    .unwrap().get("uuid").and_then(|v| v.as_str()) {
-                                    if current_level > 0 {
-                                    stack.push(new_id.to_string());
-                                    }
-                                    }
+                                        debug!("Sub-block added: {}", line);
+                                        if let Some(new_id) = response.json::<HashMap<String, serde_json::Value>>()
+                                            .unwrap().get("uuid").and_then(|v| v.as_str()) {
+                                            if current_level > 0 {
+                                                stack.push(new_id.to_string());
+                                            }
+                                        }
                                     } else {
-                                    debug!("Failed to add sub-block: {:?}", response.text().unwrap());
+                                        debug!("Failed to add sub-block: {:?}", response.text().unwrap());
                                     }
                                 } else {
                                     debug!("Error adding sub-block: {:?}", res.unwrap_err());
@@ -669,7 +663,7 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok(mut response) => {
+            Ok( response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response: {}", raw_response);
 
@@ -710,7 +704,7 @@ fn get_journal_uuid(client: &reqwest::blocking::Client) -> Result<String, String
     let journal_res = client.post(api_url()).json(&query).send();
 
     match journal_res {
-        Ok(mut response) => {
+        Ok( response) => {
             let raw_response = response.text().unwrap();
             debug!("Raw response: {}", raw_response);
 
