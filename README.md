@@ -37,7 +37,7 @@ To use the `rlu` command-line tool, you can run the following commands:
 
   You can also pipe content from stdin:
   ```sh
-  echo "Your journal content" | rlu add --date "2023-10-05"
+  echo "Your journal content" | rlu add
   ```
 
 - **Show Journal Entries**:
