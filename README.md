@@ -14,7 +14,7 @@
 
 ## Installation
 
-To install `rlu`, you'll need to have [Rust](https://www.rust-lang.org/) installed. Once you have Rust installed, you can build the project using Cargo:
+To install `rlu`, you'll need to have [Rust](https://www.rust-lang.org/) installed (builds coming soon). Once you have Rust installed, you can build the project using Cargo:
 
 ```sh
 git clone https://github.com/yourusername/rlu.git
