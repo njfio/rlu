@@ -172,10 +172,11 @@ impl Client {
     }
 
     fn add_journal_note(&mut self, note_text: &str) {
+        let formatted_text = format_output(note_text);
         let journal_id = self.current_journal();
         debug!("Journal ID: {}", journal_id);
 
-        let mut lines = note_text.lines();
+        let mut lines = formatted_text.lines();
         if let Some(first_line) = lines.next() {
             let body = json!({
                 "method": "logseq.Editor.insertBlock",
@@ -334,7 +335,7 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok( response) => {
+            Ok(response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response: {}", raw_response);
 
@@ -368,7 +369,7 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok( response) => {
+            Ok(response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response: {}", raw_response);
 
@@ -415,7 +416,7 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok( response) => {
+            Ok(response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response for child block: {}", raw_response);
 
@@ -449,11 +450,11 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok( response) => {
+            Ok(response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response: {}", raw_response);
 
-                let  entry: Block = serde_json::from_str(&raw_response).unwrap();
+                let entry: Block = serde_json::from_str(&raw_response).unwrap();
                 if let Some(content) = entry.content {
                     let updated_content = format!("{} {}", new_content, content);
                     let update_query = json!({
@@ -502,11 +503,11 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok( response) => {
+            Ok(response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response: {}", raw_response);
 
-                let  entry: Block = serde_json::from_str(&raw_response).unwrap();
+                let entry: Block = serde_json::from_str(&raw_response).unwrap();
                 if let Some(content) = entry.content {
                     let updated_content = format!("{} {}", content, new_content);
                     let update_query = json!({
@@ -663,7 +664,7 @@ impl Client {
         let res = self.client.post(api_url()).json(&query).send();
 
         match res {
-            Ok( response) => {
+            Ok(response) => {
                 let raw_response = response.text().unwrap();
                 debug!("Raw response: {}", raw_response);
 
@@ -704,7 +705,7 @@ fn get_journal_uuid(client: &reqwest::blocking::Client) -> Result<String, String
     let journal_res = client.post(api_url()).json(&query).send();
 
     match journal_res {
-        Ok( response) => {
+        Ok(response) => {
             let raw_response = response.text().unwrap();
             debug!("Raw response: {}", raw_response);
 
@@ -769,4 +770,40 @@ fn main() {
             client.delete_entry(entry_id, date.clone());
         }
     }
+}
+
+fn format_output(content: &str) -> String {
+    let mut formatted_content = String::new();
+    let mut header_stack: Vec<(usize, String)> = Vec::new();
+    let mut last_indent_level = 0;
+
+    for line in content.lines() {
+        if line.trim().is_empty() {
+            continue;
+        }
+
+        let trimmed_line = line.trim_start().to_string();
+        let current_header_level = trimmed_line.chars().take_while(|&c| c == '#').count();
+
+        if current_header_level > 0 {
+            while header_stack.len() >= current_header_level {
+                header_stack.pop();
+            }
+            header_stack.push((current_header_level, trimmed_line.clone()));
+            last_indent_level = current_header_level;
+            formatted_content.push_str(&"  ".repeat(current_header_level));
+            formatted_content.push_str(&trimmed_line);
+            formatted_content.push('\n');
+        } else if trimmed_line.starts_with('-') {
+            formatted_content.push_str(&"  ".repeat(last_indent_level + 1));
+            formatted_content.push_str(&trimmed_line);
+            formatted_content.push('\n');
+        } else {
+            formatted_content.push_str(&"  ".repeat(last_indent_level + 1));
+            formatted_content.push_str(&trimmed_line);
+            formatted_content.push('\n');
+        }
+    }
+
+    formatted_content
 }
